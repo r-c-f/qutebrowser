@@ -173,8 +173,8 @@ uppercase = false
 dictionary = /usr/share/dict/words
 auto-follow = unique-match
 auto-follow-timeout = 0
-next-regexes = \bnext\b,\bmore\b,\bnewer\b,\b[>→≫]\b,\b(>>|»)\b,\bcontinue\b
-prev-regexes = \bprev(ious)?\b,\bback\b,\bolder\b,\b[<←≪]\b,\b(<<|«)\b
+next-regexes = \\bnext\\b,\\bmore\\b,\\bnewer\\b,\\b[>\u2192\u226b]\\b,\\b(>>|\xbb)\\b,\\bcontinue\\b
+prev-regexes = \\bprev(ious)?\\b,\\bback\\b,\\bolder\\b,\\b[<\u2190\u226a]\\b,\\b(<<|\xab)\\b
 find-implementation = python
 hide-unmatched-rapid-hints = true
 [searchengines]
@@ -742,8 +742,10 @@ def get_diff():
                     continue
                 dest.append(line.rstrip())
 
-    conf_delta = difflib.unified_diff(OLD_CONF.splitlines(), old_conf_lines)
-    key_delta = difflib.unified_diff(OLD_KEYS_CONF.splitlines(), old_key_lines)
+    conf_delta = difflib.unified_diff(OLD_CONF.lstrip().splitlines(),
+                                      old_conf_lines)
+    key_delta = difflib.unified_diff(OLD_KEYS_CONF.lstrip().splitlines(),
+                                     old_key_lines)
 
     conf_diff = '\n'.join(conf_delta)
     key_diff = '\n'.join(key_delta)

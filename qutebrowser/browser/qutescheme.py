@@ -385,7 +385,7 @@ def qute_help(url):
 
             This most likely means the documentation was not generated
             properly. If you are running qutebrowser from the git repository,
-            please (re)run scripts/asciidoc2html.py.
+            please (re)run scripts/asciidoc2html.py and reload this page.
 
             If you're running a released version this is a bug, please use
             :report to report it.
