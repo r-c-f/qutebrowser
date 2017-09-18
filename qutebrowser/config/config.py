@@ -19,6 +19,7 @@
 
 """Configuration storage and config-related utilities."""
 
+import sys
 import copy
 import contextlib
 import functools
@@ -39,6 +40,8 @@ key_instance = None
 
 # Keeping track of all change filters to validate them later.
 _change_filters = []
+# Errors which happened during init, so we can show a message box.
+_init_errors = []
 
 
 class change_filter:  # pylint: disable=invalid-name
@@ -382,6 +385,14 @@ class Config(QObject):
         self._mutables = []
         self._yaml = yaml_config
 
+    def init_save_manager(self, save_manager):
+        """Make sure the config gets saved properly.
+
+        We do this outside of __init__ because the config gets created before
+        the save_manager exists.
+        """
+        self._yaml.init_save_manager(save_manager)
+
     def _set_value(self, opt, value):
         """Set the given option to the given value."""
         if objects.backend is not None:
@@ -634,18 +645,14 @@ class StyleSheetObserver(QObject):
             instance.changed.connect(self._update_stylesheet)
 
 
-def init(parent=None):
-    """Initialize the config.
-
-    Args:
-        parent: The parent to pass to QObjects which get initialized.
-    """
+def early_init():
+    """Initialize the part of the config which works without a QApplication."""
     configdata.init()
 
     yaml_config = configfiles.YamlConfig()
 
     global val, instance, key_instance
-    instance = Config(yaml_config=yaml_config, parent=parent)
+    instance = Config(yaml_config=yaml_config)
     val = ConfigContainer(instance)
     key_instance = KeyConfig(instance)
 
@@ -666,12 +673,7 @@ def init(parent=None):
             raise configexc.ConfigFileErrors('config.py', config_api.errors)
     except configexc.ConfigFileErrors as e:
         log.config.exception("Error while loading config.py")
-        errbox = msgbox.msgbox(parent=None,
-                               title="Error while reading config",
-                               text=e.to_html(),
-                               icon=QMessageBox.Warning,
-                               plain_text=False)
-        errbox.exec_()
+        _init_errors.append(e)
 
     try:
         if getattr(config_api, 'load_autoconfig', True):
@@ -683,12 +685,45 @@ def init(parent=None):
                 desc = configexc.ConfigErrorDesc("Error", e)
                 raise configexc.ConfigFileErrors('autoconfig.yml', [desc])
     except configexc.ConfigFileErrors as e:
-        log.config.exception("Error while loading autoconfig.yml")
+        log.config.exception("Error while loading config.py")
+        _init_errors.append(e)
+
+    configfiles.init()
+
+
+def late_init(save_manager):
+    """Initialize the rest of the config after the QApplication is created."""
+    global _init_errors
+    for err in _init_errors:
         errbox = msgbox.msgbox(parent=None,
                                title="Error while reading config",
-                               text=e.to_html(),
+                               text=err.to_html(),
                                icon=QMessageBox.Warning,
                                plain_text=False)
         errbox.exec_()
+    _init_errors = []
 
-    configfiles.init()
+    instance.init_save_manager(save_manager)
+    configfiles.state.init_save_manager(save_manager)
+
+
+def qt_args(namespace):
+    """Get the Qt QApplication arguments based on an argparse namespace.
+
+    Args:
+        namespace: The argparse namespace.
+
+    Return:
+        The argv list to be passed to Qt.
+    """
+    argv = [sys.argv[0]]
+
+    if namespace.qt_flag is not None:
+        argv += ['--' + flag[0] for flag in namespace.qt_flag]
+
+    if namespace.qt_arg is not None:
+        for name, value in namespace.qt_arg:
+            argv += ['--' + name, value]
+
+    argv += ['--' + arg for arg in val.qt_args]
+    return argv

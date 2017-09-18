@@ -24,7 +24,6 @@ import sys
 import pytest
 
 from qutebrowser.config import config, configfiles, configexc
-from qutebrowser.utils import objreg
 
 from PyQt5.QtCore import QSettings
 
@@ -322,9 +321,9 @@ class TestConfigPy:
 
 @pytest.fixture
 def init_patch(qapp, fake_save_manager, config_tmpdir, data_tmpdir,
-               config_stub):
+               config_stub, monkeypatch):
+    monkeypatch.setattr(configfiles, 'state', None)
     yield
-    objreg.delete('state-config')
 
 
 def test_init(init_patch, config_tmpdir):

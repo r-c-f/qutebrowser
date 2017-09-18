@@ -208,6 +208,7 @@
 |<<new_instance_open_target_window,new_instance_open_target_window>>|Which window to choose when opening links as new tabs.
 |<<prompt.filebrowser,prompt.filebrowser>>|Show a filebrowser in upload/download prompts.
 |<<prompt.radius,prompt.radius>>|The rounding radius for the edges of prompts.
+|<<qt_args,qt_args>>|Additional arguments to pass to Qt, without leading `--`.
 |<<scrolling.bar,scrolling.bar>>|Show a scrollbar.
 |<<scrolling.smooth,scrolling.smooth>>|Enable smooth scrolling for web pages.
 |<<session_default_name,session_default_name>>|The name of the session to save by default.
@@ -253,6 +254,7 @@
 [[aliases]]
 === aliases
 Aliases for commands.
+The keys of the given dictionary are the aliases, while the values are the commands they map to.
 
 Type: <<types,Dict>>
 
@@ -1693,6 +1695,7 @@ Default: +pass:[true]+
 [[content.javascript.log]]
 === content.javascript.log
 Log levels to use for JavaScript console logging messages.
+When a JavaScript message with the level given in the dictionary key is logged, the corresponding dictionary value selects the qutebrowser logger to use.
 On QtWebKit, the "unknown" setting is always used.
 
 Type: <<types,Dict>>
@@ -2084,7 +2087,7 @@ Font used for the hints.
 
 Type: <<types,Font>>
 
-Default: +pass:[bold 13px monospace]+
+Default: +pass:[bold 10pt monospace]+
 
 [[fonts.keyhint]]
 === fonts.keyhint
@@ -2604,6 +2607,15 @@ Type: <<types,Int>>
 
 Default: +pass:[8]+
 
+[[qt_args]]
+=== qt_args
+Additional arguments to pass to Qt, without leading `--`.
+With QtWebEngine, some Chromium arguments (see https://peter.sh/experiments/chromium-command-line-switches/ for a list) will work.
+
+Type: <<types,List>>
+
+Default: empty
+
 [[scrolling.bar]]
 === scrolling.bar
 Show a scrollbar.
@@ -3002,7 +3014,8 @@ Default:
 [[url.searchengines]]
 === url.searchengines
 Definitions of search engines which can be used via the address bar.
-The searchengine named `DEFAULT` is used when `url.auto_search` is turned on and something else than a URL was entered to be opened. Other search engines can be used by prepending the search engine name to the search term, e.g. `:open google qutebrowser`. The string `{}` will be replaced by the search term, use `{{` and `}}` for literal `{`/`}` signs.
+Maps a searchengine name (such as `DEFAULT`, or `ddg`) to a URL with a `{}` placeholder. The placeholder will be replaced by the search term, use `{{` and `}}` for literal `{`/`}` signs.
+The searchengine named `DEFAULT` is used when `url.auto_search` is turned on and something else than a URL was entered to be opened. Other search engines can be used by prepending the search engine name to the search term, e.g. `:open google qutebrowser`.
 
 Type: <<types,Dict>>
 

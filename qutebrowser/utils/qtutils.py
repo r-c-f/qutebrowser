@@ -29,13 +29,11 @@ Module attributes:
 
 import io
 import os
-import sys
 import operator
 import contextlib
 
 from PyQt5.QtCore import (qVersion, QEventLoop, QDataStream, QByteArray,
                           QIODevice, QSaveFile, QT_VERSION_STR)
-from PyQt5.QtWidgets import QApplication
 try:
     from PyQt5.QtWebKit import qWebKitVersion
 except ImportError:  # pragma: no cover
@@ -139,27 +137,6 @@ def check_overflow(arg, ctype, fatal=True):
         return arg
 
 
-def get_args(namespace):
-    """Get the Qt QApplication arguments based on an argparse namespace.
-
-    Args:
-        namespace: The argparse namespace.
-
-    Return:
-        The argv list to be passed to Qt.
-    """
-    argv = [sys.argv[0]]
-
-    if namespace.qt_flag is not None:
-        argv += ['--' + flag[0] for flag in namespace.qt_flag]
-
-    if namespace.qt_arg is not None:
-        for name, value in namespace.qt_arg:
-            argv += ['--' + name, value]
-
-    return argv
-
-
 def check_print_compat():
     """Check if printing should work in the given Qt version."""
     # WORKAROUND (remove this when we bump the requirements to 5.3.0)
@@ -240,23 +217,6 @@ def savefile_open(filename, binary=False, encoding='utf-8'):
         commit_ok = f.commit()
         if not commit_ok and not cancelled:
             raise QtOSError(f, msg="Commit failed!")
-
-
-@contextlib.contextmanager
-def unset_organization():
-    """Temporarily unset QApplication.organizationName().
-
-    This is primarily needed in config.py.
-    """
-    qapp = QApplication.instance()
-    if qapp is not None:
-        orgname = qapp.organizationName()
-        qapp.setOrganizationName(None)
-    try:
-        yield
-    finally:
-        if qapp is not None:
-            qapp.setOrganizationName(orgname)
 
 
 class PyQIODevice(io.BufferedIOBase):
