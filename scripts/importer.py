@@ -29,6 +29,9 @@ Currently only importing bookmarks from Netscape Bookmark files is supported.
 import argparse
 import inspect
 import sys
+import os
+import sqlite3
+import glob
 
 _browser_default_input_format = {}
 
@@ -229,7 +232,7 @@ class NetscapeImporter(Importer):
     """Importer for Netscape HTML bookmarks files."""
 
     format_ = 'netscape'
-    browsers = ['firefox', 'ie', 'chromium', 'seamonkey']
+    browsers = ['ie', 'chromium']
 
     def read(self):
         import bs4
@@ -257,6 +260,76 @@ class NetscapeImporter(Importer):
                     #bookmark
                     if url not in self.bookmarks:
                         self.bookmarks[url] = title
+
+
+class MozPlaceImporter(Importer):
+    """Import from Mozilla profiles using places.sqlite
+    """
+    browsers = ['firefox', 'palemoon', 'seamonkey']
+    format_ = 'mozplace'
+
+    def _guess_profile_path(self, browser):
+        """Find Mozilla profile path
+        """
+        mozroots = {
+            "firefox": "/.mozilla/firefox",
+            "seamonkey": "/.mozilla/seamonkey",
+            "palemoon": "/.moonchild productions/pale moon"
+        }  # for mac and windows: case doesn't matter
+        browser = browser.lower()
+        if browser not in mozroots:
+            return None
+        mozroot = mozroots[browser]  # 'real' POSIX
+        mozroot_dotless = mozroot.replace('.', '')  # win32, OS X
+        root = ''
+        if os.name == "nt":
+            root += os.environ["APPDATA"] + mozroot_dotless
+        elif os.name == "posix":
+            root += os.environ["HOME"]
+            if sys.platform == "darwin":
+                root += "/Library"  # macOS has two potential roots
+                path = root + "/Application Support" + mozroot_dotless
+                if os.path.exists(path):
+                    root = path
+                else:
+                    path = root + mozroot_dotless  # A second candidate
+            else:
+                root += mozroot
+        try:
+            self._path = glob.glob(root + "/*" + self._path)[0]
+        except IndexError:
+            raise FileNotFoundError("No profile found")
+
+    def read(self):
+        """Import bookmarks from a Mozilla profile's places.sqlite database"""
+        places = sqlite3.connect(self._path + "/places.sqlite")
+        places.row_factory = sqlite3.Row
+        c = places.cursor()
+        c.execute(
+            "SELECT DISTINCT moz_bookmarks.title,moz_places.url "
+            "FROM moz_bookmarks,moz_places "
+            "WHERE moz_places.id=moz_bookmarks.fk "
+            "AND moz_places.id NOT IN (SELECT place_id FROM moz_keywords) "
+            "AND moz_places.url NOT LIKE 'place:%';")
+        for row in c:
+            self.bookmarks[row['url']] = row['title']
+        c.execute("SELECT moz_keywords.keyword,moz_places.url "
+                  "FROM moz_keywords,moz_places,moz_bookmarks "
+                  "WHERE moz_places.id=moz_bookmarks.fk "
+                  "AND moz_places.id=moz_keywords.place_id "
+                  "AND moz_places.url NOT LIKE '%!%s%' ESCAPE '!';")
+        for row in c:
+            self.keywords[row['keyword']] = row['url']
+        c.execute("SELECT "
+                  "  moz_keywords.keyword, "
+                  "  moz_bookmarks.title, "
+                  "  REPLACE(moz_places.url,'%s','{}') AS url "
+                  "FROM moz_keywords,moz_places,moz_bookmarks "
+                  "WHERE moz_places.id=moz_bookmarks.fk "
+                  "AND moz_places.id=moz_keywords.place_id "
+                  "AND REPLACE(moz_places.url,'%s','{}') LIKE '%{}%';")
+        for row in c:
+            self.searches[row['keyword']] = row['url']
 
 
 if __name__ == '__main__':
