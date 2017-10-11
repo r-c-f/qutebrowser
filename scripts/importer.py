@@ -296,7 +296,8 @@ class MozPlaceImporter(Importer):
             else:
                 root += mozroot
         try:
-            self._path = glob.glob(root + "/*" + self._path)[0]
+            self._path = os.path.normpath(
+                glob.glob(root + "/*" + self._path)[0])
         except IndexError:
             raise FileNotFoundError("No profile found")
 
