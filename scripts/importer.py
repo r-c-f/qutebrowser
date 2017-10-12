@@ -123,7 +123,10 @@ def get_args():
         action='store_true',
         default=False,
         required=False)
-    parser.add_argument('bookmarks', help="Bookmarks file (html format)")
+    parser.add_argument(
+        'bookmarks',
+        help="Bookmarks file (html format), "
+        "profile path, or (if browser given) profile name")
     args = parser.parse_args()
     #make sure we can assume proper input format
     if not args.input_format:
@@ -276,16 +279,15 @@ class MozPlaceImporter(Importer):
             "seamonkey": "/.mozilla/seamonkey",
             "palemoon": "/.moonchild productions/pale moon"
         }  # for mac and windows: case doesn't matter
-        browser = browser.lower()
-        if browser not in mozroots:
-            return None
+        assert(set(mozroots.keys()) == set(self.browsers))  # sanity check
+
         mozroot = mozroots[browser]  # 'real' POSIX
         mozroot_dotless = mozroot.replace('.', '')  # win32, OS X
-        root = ''
+        root = None
         if os.name == "nt":
-            root += os.environ["APPDATA"] + mozroot_dotless
+            root = os.environ["APPDATA"] + mozroot_dotless
         elif os.name == "posix":
-            root += os.environ["HOME"]
+            root = os.environ["HOME"]
             if sys.platform == "darwin":
                 root += "/Library"  # macOS has two potential roots
                 path = root + "/Application Support" + mozroot_dotless
