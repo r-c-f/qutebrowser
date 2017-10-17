@@ -125,8 +125,7 @@ def get_args():
     #make sure we can assume proper input format
     if not args.input_format:
         if not args.browser:
-            print("Must specify either browser or input format")
-            exit(1)
+            sys.exit("Must specify either browser or input format")
         args.input_format = _browser_default_input_format[args.browser]
     #create more intelligent default behavior
     if not args.search_output:
