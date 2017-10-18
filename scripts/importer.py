@@ -139,6 +139,13 @@ def get_args():
     return args
 
 
+def dumb_search_escape(url):
+    """Replace { and } with {{ and }}. Dumb in that it will obviously ruin a
+    properly-formatted Qutebrowser search engine URL.
+    """
+    return url.replace('{', '{{').replace('}', '}}')
+
+
 class Importer:
     """Base class for importers.
 
@@ -148,7 +155,7 @@ class Importer:
         _path: Path to bookmarks file or profile
         bookmarks: Dictionary mapping URLs to titles
         keywords: Dictionary mapping keywords to URL
-        searches: Dictionary mapping keywords to URL in search format
+        searchengines: Dictionary mapping keywords to URL in search format
     """
     format_ = None
     browsers = None
@@ -164,7 +171,7 @@ class Importer:
         """
         self.bookmarks = {}
         self.keywords = {}
-        self.searches = {}
+        self.searchengines = {}
         self._path = path
         if browser:
             self._guess_profile_path(browser)
@@ -185,13 +192,13 @@ class Importer:
     def print_config_py(self):
         """Print search engines in config.py format
         """
-        for search in self.searches.items():
+        for search in self.searchengines.items():
             print('c.url.searchengines["{}"] = "{}"'.format(*search))
 
     def print_qutebrowser_conf(self):
         """Print search engines in qutebrowser.conf format
         """
-        for search in self.searches.items():
+        for search in self.searchengines.items():
             print('{} = {}'.format(*search))
 
     def print_bookmarks(self, include_bookmarks, include_keywords):
@@ -202,8 +209,8 @@ class Importer:
             include_keywords: Include self.keywords
         """
         if include_bookmarks:
-            for bookmark in self.bookmarks.items():
-                print(*bookmark)
+            for url, title in self.bookmarks.items():
+                print(url, title)
         if include_keywords:
             for keyword, url in self.keywords.items():
                 print(url, keyword)
@@ -219,8 +226,8 @@ class Importer:
             for url, title in self.bookmarks.items():
                 print(title, url)
         if include_keywords:
-            for keyword in self.keywords.items():
-                print(*keyword)
+            for keyword, url in self.keywords.items():
+                print(keyword, url)
 
 
 class NetscapeImporter(Importer):
@@ -239,7 +246,8 @@ class NetscapeImporter(Importer):
             ('shortcuturl' in tag.attrs) and
             ('%s' in tag['href'])))
         for tag in tags:
-            self.searches[tag['shortcuturl']] = tag['href']
+            qburl = dumb_search_escape(tag['href']).replace('%s', '{}')
+            self.searchengines[tag['shortcuturl']] = qburl
         tags = soup.findAll(lambda tag: (
             (tag.name == 'a') and
             ('shortcuturl' in tag.attrs) and
