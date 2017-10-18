@@ -140,9 +140,7 @@ def get_args():
 
 
 def dumb_search_escape(url):
-    """Replace { and } with {{ and }}. Dumb in that it will obviously ruin a
-    properly-formatted Qutebrowser search engine URL.
-    """
+    """Escape { and } in url. Dumb in that it ruins proper Qutebrowser URLs."""
     return url.replace('{', '{{').replace('}', '}}')
 
 
@@ -156,7 +154,9 @@ class Importer:
         bookmarks: Dictionary mapping URLs to titles
         keywords: Dictionary mapping keywords to URL
         searchengines: Dictionary mapping keywords to URL in search format
+
     """
+
     format_ = None
     browsers = None
 
@@ -177,7 +177,7 @@ class Importer:
             self._guess_profile_path(browser)
 
     def _guess_profile_path(self, browser):
-        """Guess profile path given browser name
+        """Guess profile path given browser name.
 
         Args:
             browser: name in self.browsers
@@ -185,24 +185,21 @@ class Importer:
         raise NotImplementedError
 
     def read(self):
-        """Read entries from filesystem
-        """
+        """Read entries from filesystem."""
         raise NotImplementedError
 
     def print_config_py(self):
-        """Print search engines in config.py format
-        """
+        """Print search engines in config.py format."""
         for search in self.searchengines.items():
             print('c.url.searchengines["{}"] = "{}"'.format(*search))
 
     def print_qutebrowser_conf(self):
-        """Print search engines in qutebrowser.conf format
-        """
+        """Print search engines in qutebrowser.conf format."""
         for search in self.searchengines.items():
             print('{} = {}'.format(*search))
 
     def print_bookmarks(self, include_bookmarks, include_keywords):
-        """Print boookmarks file
+        """Print boookmarks file.
 
         Args:
             include_bookmarks: Include self.bookmarks
@@ -216,7 +213,7 @@ class Importer:
                 print(url, keyword)
 
     def print_quickmarks(self, include_bookmarks, include_keywords):
-        """Print quickmarks file
+        """Print quickmarks file.
 
         Args:
             include_bookmarks: Include self.bookmarks
@@ -231,8 +228,8 @@ class Importer:
 
 
 class NetscapeImporter(Importer):
-    """Importer for Netscape HTML bookmarks files
-    """
+    """Importer for Netscape HTML bookmarks files."""
+
     format_ = 'netscape'
     browsers = ['firefox', 'ie', 'chromium', 'seamonkey']
 
