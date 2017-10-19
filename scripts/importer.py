@@ -266,14 +266,13 @@ class NetscapeImporter(Importer):
 
 
 class MozPlaceImporter(Importer):
-    """Import from Mozilla profiles using places.sqlite
-    """
+    """Import from Mozilla profiles using places.sqlite."""
+
     browsers = ['firefox', 'palemoon', 'seamonkey']
     format_ = 'mozplace'
 
     def _guess_profile_path(self, browser):
-        """Find Mozilla profile path
-        """
+        """Find Mozilla profile path."""
         mozroots = {
             "firefox": "/.mozilla/firefox",
             "seamonkey": "/.mozilla/seamonkey",
@@ -304,7 +303,7 @@ class MozPlaceImporter(Importer):
             raise FileNotFoundError("No profile found")
 
     def read(self):
-        """Import bookmarks from a Mozilla profile's places.sqlite database"""
+        """Import bookmarks from a Mozilla profile's places.sqlite database."""
         places = sqlite3.connect(self._path + "/places.sqlite")
         places.row_factory = sqlite3.Row
         c = places.cursor()
