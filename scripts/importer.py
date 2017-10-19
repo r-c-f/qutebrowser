@@ -129,11 +129,9 @@ def get_args():
         args.input_format = _browser_default_input_format[args.browser]
     #create more intelligent default behavior
     if not args.search_output:
-        if not (args.bookmark_output or
-                args.quickmark_output):
+        if not (args.bookmark_output or args.quickmark_output):
             args.quickmark_output = True
-        if not (args.import_bookmarks or
-                args.import_keywords):
+        if not (args.import_bookmarks or args.import_keywords):
             args.import_bookmarks = True
             args.import_keywords = True
     return args
@@ -237,26 +235,25 @@ class NetscapeImporter(Importer):
         import bs4
         with open(self._path, encoding='utf-8') as f:
             soup = bs4.BeautifulSoup(f, 'html.parser')
-
-        tags = soup.findAll(lambda tag: (
-            (tag.name == 'a') and
-            ('shortcuturl' in tag.attrs) and
-            ('%s' in tag['href'])))
+        tags = soup.findAll('a')
         for tag in tags:
-            qburl = dumb_search_escape(tag['href']).replace('%s', '{}')
-            self.searchengines[tag['shortcuturl']] = qburl
-        tags = soup.findAll(lambda tag: (
-            (tag.name == 'a') and
-            ('shortcuturl' in tag.attrs) and
-            ('%s' not in tag['href'])))
-        for tag in tags:
-            self.keywords[tag['shortcuturl']] = tag['href']
-        tags = soup.findAll(lambda tag: (
-            (tag.name == 'a') and
-            ('shortcuturl' not in tag.attrs) and
-            (tag.string)))
-        for tag in tags:
-            self.bookmarks[tag['href']] = tag.string
+            url = None
+            keyword = None
+            title = tag.string
+            if tag.has_attr('href'):
+                url = tag['href']
+                if tag.has_attr('shortcuturl'):
+                    keyword = tag['shortcuturl']
+                    if '%s' in tag['href']:
+                        #seach engine
+                        qburl = dumb_search_escape(url).replace('%s', '{}')
+                        self.searchengines[keyword] = qburl
+                    else:
+                        #keyword
+                        self.keywords[keyword] = url
+                else:
+                    #bookmark
+                    self.bookmarks[url] = title
 
 
 if __name__ == '__main__':
