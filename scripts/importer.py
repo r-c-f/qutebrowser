@@ -319,20 +319,13 @@ class MozPlaceImporter(Importer):
         c.execute("SELECT moz_keywords.keyword,moz_places.url "
                   "FROM moz_keywords,moz_places,moz_bookmarks "
                   "WHERE moz_places.id=moz_bookmarks.fk "
-                  "AND moz_places.id=moz_keywords.place_id "
-                  "AND moz_places.url NOT LIKE '%!%s%' ESCAPE '!';")
+                  "AND moz_places.id=moz_keywords.place_id ")
         for row in c:
-            self.keywords[row['keyword']] = row['url']
-        c.execute("SELECT "
-                  "  moz_keywords.keyword, "
-                  "  moz_bookmarks.title, "
-                  "  REPLACE(moz_places.url,'%s','{}') AS url "
-                  "FROM moz_keywords,moz_places,moz_bookmarks "
-                  "WHERE moz_places.id=moz_bookmarks.fk "
-                  "AND moz_places.id=moz_keywords.place_id "
-                  "AND REPLACE(moz_places.url,'%s','{}') LIKE '%{}%';")
-        for row in c:
-            self.searches[row['keyword']] = row['url']
+            if '%s' in row['url']:
+                qburl = dumb_search_escape(row['url']).replace('%s', '{}')
+                self.searchengines[row['keyword']] = qburl
+            else:
+                self.keywords[row['keyword']] = row['url']
 
 
 if __name__ == '__main__':
