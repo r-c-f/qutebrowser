@@ -247,13 +247,16 @@ class NetscapeImporter(Importer):
                     if '%s' in tag['href']:
                         #seach engine
                         qburl = dumb_search_escape(url).replace('%s', '{}')
-                        self.searchengines[keyword] = qburl
+                        if keyword not in self.searchengines:
+                            self.searchengines[keyword] = qburl
                     else:
                         #keyword
-                        self.keywords[keyword] = url
+                        if keyword not in self.keywords:
+                            self.keywords[keyword] = url
                 else:
                     #bookmark
-                    self.bookmarks[url] = title
+                    if url not in self.bookmarks:
+                        self.bookmarks[url] = title
 
 
 if __name__ == '__main__':
