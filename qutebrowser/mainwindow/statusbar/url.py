@@ -141,7 +141,8 @@ class UrlText(textbase.TextBase):
             self._normal_url = "Invalid URL!"
         else:
             self._normal_url = urlutils.safe_display_string(url)
-        self._normal_url_type = UrlType.normal
+        if self._normal_url_type is None:
+            self._normal_url_type = UrlType.normal
         self._update_url()
 
     @pyqtSlot(str)
