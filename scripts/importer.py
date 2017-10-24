@@ -281,6 +281,7 @@ class MozPlaceImporter(Importer):
             "FROM moz_bookmarks,moz_places "
             "WHERE moz_places.id=moz_bookmarks.fk "
             "AND moz_places.id NOT IN (SELECT place_id FROM moz_keywords) "
+            #these are directories and therefore useless 
             "AND moz_places.url NOT LIKE 'place:%';")
         for row in c:
             self.bookmarks[row['url']] = row['title']
