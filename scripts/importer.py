@@ -271,37 +271,6 @@ class MozPlaceImporter(Importer):
     browsers = ['firefox', 'palemoon', 'seamonkey']
     format_ = 'mozplace'
 
-    def _guess_profile_path(self, browser):
-        """Find Mozilla profile path."""
-        mozroots = {
-            "firefox": "/.mozilla/firefox",
-            "seamonkey": "/.mozilla/seamonkey",
-            "palemoon": "/.moonchild productions/pale moon"
-        }  # for mac and windows: case doesn't matter
-        assert(set(mozroots.keys()) == set(self.browsers))  # sanity check
-
-        mozroot = mozroots[browser]  # 'real' POSIX
-        mozroot_dotless = mozroot.replace('.', '')  # win32, OS X
-        root = None
-        if os.name == "nt":
-            root = os.environ["APPDATA"] + mozroot_dotless
-        elif os.name == "posix":
-            root = os.environ["HOME"]
-            if sys.platform == "darwin":
-                root += "/Library"  # macOS has two potential roots
-                path = root + "/Application Support" + mozroot_dotless
-                if os.path.exists(path):
-                    root = path
-                else:
-                    path = root + mozroot_dotless  # A second candidate
-            else:
-                root += mozroot
-        try:
-            self._path = os.path.normpath(
-                glob.glob(root + "/*" + self._path)[0])
-        except IndexError:
-            raise FileNotFoundError("No profile found")
-
     def read(self):
         """Import bookmarks from a Mozilla profile's places.sqlite database."""
         places = sqlite3.connect(self._path + "/places.sqlite")
