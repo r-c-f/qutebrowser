@@ -28,8 +28,6 @@ Currently only importing bookmarks from Netscape Bookmark files is supported.
 
 import argparse
 import sqlite3
-import glob
-import os
 import sys
 
 
