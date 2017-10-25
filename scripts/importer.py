@@ -29,7 +29,7 @@ Currently only importing bookmarks from Netscape Bookmark files is supported.
 import argparse
 import sqlite3
 import sys
-
+import os
 
 browser_default_input_format = {
     'chromium': 'netscape',
@@ -229,7 +229,7 @@ def import_moz_places(profile, bookmark_types, output_format):
          "FROM moz_keywords,moz_places,moz_bookmarks "
          "WHERE moz_places.id=moz_bookmarks.fk "
          "AND moz_places.id=moz_keywords.place_id "
-         "AND search_conv(moz_places.url) LIKE '%{}%';"
+         "AND moz_places.url LIKE '%!%s%' ESCAPE '!';"
          )  # bookmarks with keyword and %s substitution
     }
     out_template = {
@@ -252,7 +252,7 @@ def import_moz_places(profile, bookmark_types, output_format):
     def search_conv(url):
         return search_escape(url).replace('%s', '{}')
 
-    places = sqlite3.connect(profile + "/places.sqlite")
+    places = sqlite3.connect(os.path.join(profile, "places.sqlite"))
     places.create_function('search_conv', 1, search_conv)
     places.row_factory = sqlite3.Row
     c = places.cursor()
