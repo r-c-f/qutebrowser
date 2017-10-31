@@ -37,6 +37,7 @@ browser_default_input_format = {
 }
 
 
+# pylint: disable=too-many-branches
 def main():
     args = get_args()
     bookmark_types = []
@@ -57,6 +58,7 @@ def main():
             bookmark_types.append('bookmark')
         if args.import_keywords:
             bookmark_types.append('keyword')
+    # Select defaults more intelligently than argparse
     if not bookmark_types:
         bookmark_types = ['bookmark', 'keyword']
     if not output_format:
